@@ -1,0 +1,47 @@
+Future Method Implemenatation
+
+Solution :
+----------
+Class - AccountProcessor
+------------------------
+
+public class AccountProcessor {
+
+    @future
+    public static void countContacts(List<Id> accountIds){
+     List<Account> accounts = [Select Id, (Select Id FROM Contacts)FROM Account Where Id IN :accountIds];
+        for(Account acc: accounts){
+            acc.Number_Of_Contacts__c=acc.Contacts.size();
+        }
+    }
+}
+
+
+Class - AccountProcessorTest
+----------------------------
+
+@isTest
+private class AccountProcessorTest {
+
+    @isTest
+    private static void countContactsTest(){
+        
+        List<Account> acc=new List<Account>();
+        for(Integer i=0; i<=300; i++){
+           acc.add(new Account(Name='Test Account Trailhead'+i));
+        }
+        insert acc;
+        
+        List<Contact> cont=new List<Contact>();
+        List<Id> accids=new List<Id>();
+        for (Account accounts: acc){
+            cont.add(new Contact(FirstName=accounts.Name, LastName='TestContact', AccountId=accounts.Id));
+            accids.add(accounts.Id);
+        }
+        insert cont;
+        
+        Test.startTest();
+        AccountProcessor.countContacts(accids);
+        Test.stopTest();
+    }
+}
