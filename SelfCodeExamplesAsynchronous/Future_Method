@@ -1,0 +1,109 @@
+@Future method with the test class
+
+Class - CalculateCaseOrigin
+---------------------------
+
+public class CalculateCaseOrigin {
+
+    @future
+    public static void countCaseBasedonOrigin(List<Id> accIds){
+        
+        List<Account> acclist= [Select Id, Case_through_Email__c, Case_through_Phone__c, Case_through_Web__c, (Select Id, Origin from Cases)
+                               from Account where Id IN: accIds];
+        
+        for(Account acc: acclist){
+            Integer Phone=0, Email=0, Web=0;
+            for(Case ca: acc.Cases){
+                if(ca.Origin=='Phone'){
+                    Phone++;
+                }else if(Ca.Origin=='Email'){
+                    Email++;
+                }else if(Ca.Origin=='Web'){
+                    Web++;
+                }
+            }
+            acc.Case_through_Email__c=Email;
+            acc.Case_through_Phone__c=Phone;
+            acc.Case_through_Web__c=Web;
+        }
+        if(!acclist.isEmpty()){
+            update acclist;
+        }
+    }
+}
+
+
+Class - CalculateCaseOriginTest
+--------------------------------
+
+@isTest
+public class CalculateCaseOriginTest {
+    @isTest
+    public static void testcountcases(){
+        List<Account> acclist=new List<Account>();
+        
+        for(Integer i=1; i<=5;i++){
+            Account acc=(new Account(Name='Testing'+i));
+                acclist.add(acc);
+        }
+        insert acclist;
+        
+        List<Case> caseList=new List<Case>();
+        List<Id> accIds=new List<Id>();
+        
+        for(Account acc : acclist){
+            accIds.add(acc.Id);
+            for(Integer i=1; i<=3; i++){
+                Case c=new Case();
+                c.status='New';
+                c.Origin='Phone';
+                c.AccountId=acc.Id;
+                caseList.add(c);    
+            }
+             for(Integer i=1; i<=3; i++){
+                Case c=new Case();
+                c.status='New';
+                c.Origin='Email';
+                c.AccountId=acc.Id;
+                caseList.add(c);    
+            }
+             for(Integer i=1; i<=3; i++){
+                Case c=new Case();
+                c.status='New';
+                c.Origin='Web';
+                c.AccountId=acc.Id;
+                caseList.add(c);    
+            }
+        }
+        insert caseList;
+        
+        Test.startTest();
+        CalculateCaseOrigin.countCaseBasedonOrigin(accIds);
+        Test.stopTest();
+        
+        List<Account> updatedaccount=new List<Account>();
+        updatedaccount=[Select Id, Case_through_Email__c, Case_through_Phone__c, Case_through_Web__c from Account where Id IN:accIds];
+        
+        
+        // updatedaccount[0], after quereing the record the updatedaccount will be containing the list of the accids, so in this case
+        // randomly we are selecting the Id which is available at the oth index and checking the different field values of it.
+        // As we have inserted 3 each records to the accids, so we are checking with the 3 records.
+        
+        System.assertEquals(3, updatedaccount[0].Case_through_Email__c);
+        System.assertEquals(3, updatedaccount[0].Case_through_Phone__c);
+        System.assertEquals(3, updatedaccount[0].Case_through_Web__c);
+    } 
+}
+
+
+Execute throughthe anonymouse window -
+---------------------------------------
+
+List<Account> acclist=[Select Id from Account];
+List<Id> accIds=new List<Id>();
+
+for(Account acc: acclist){
+    accIds.add(acc.Id);
+}
+
+CalculateCaseOrigin.countCaseBasedonOrigin(accIds);
